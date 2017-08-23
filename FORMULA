@@ -1,0 +1,9 @@
+name: django
+os: RedHat, CentOS, Ubuntu, Debian
+os_family: RedHat, Debian
+version: 201708
+release: 1
+summary: SaltStack formula for installing and managing Django applications
+description: SaltStack formula for installing and managing Django applications
+top_level_dir: django
+recommended: 
