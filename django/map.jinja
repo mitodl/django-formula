@@ -1,14 +1,17 @@
 {% set django = salt.grains.filter_by({
     'default': {
-        'pkgs': ['django'],
-        'service': 'django',
-        'conf_file': '/etc/django/django.conf',
+        'automatic_migrations': False,
+        'pkgs': ['git'],
+        'deploy_from_git': True,
+        'settings_file': 'settings.py',
         'config': {
             'key': 'value',
         },
+        'user': 'deploy',
+        'requirements_file': 'requirements.txt'
     },
     'Debian': {
     },
     'RedHat': {
     },
-}, grain='os_family', merge=salt.pillar.get('django:overrides), base='default') %}
+}, grain='os_family', merge=salt.pillar.get('django'), base='default') %}

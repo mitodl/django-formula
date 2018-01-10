@@ -1,6 +1,6 @@
 base:
   '*':
     - django
-    
+    - nginx.ng
+    - uwsgi
     - django.tests
-    

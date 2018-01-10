@@ -1,7 +1,3 @@
 # -*- mode: yaml -*-
 django:
-  overrides:
-    pkg: django
-    conf_file: /usr/local/etc/django/django.conf
-  config:
-    key: othervalue
+  git_repository: https://github.com/mitodl/odl-video-service
