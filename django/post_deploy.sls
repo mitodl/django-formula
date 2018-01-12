@@ -6,7 +6,7 @@ migrate_database:
     django.command:
       - settings_module: {{ django.settings_file }}
       - command: migrate
-        {% endif %}
+{% endif %}
 
 collect_static_assets:
   module.run:
@@ -14,5 +14,10 @@ collect_static_assets:
       - settings_module: {{ django.settings_file }}
       - command: collectstatic
 
+{% set post_install_states = salt.pillar.get('django:states:post_install', []) %}
+{% if post_install_states %}
 include:
-  - {{ app_name }}.post_install
+  {% for post_install_state in post_install_states %}
+  - {{ post_install_state }}
+  {% endfor %}
+{% endif %}

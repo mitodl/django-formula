@@ -1,3 +1,6 @@
 # -*- mode: yaml -*-
 django:
-  git_repository: https://github.com/mitodl/odl-video-service
+  app_source:
+    type: git # Options are: git, hg, archive
+    revision: master
+    repository_url: https://github.com/mitodl/odl-video-service

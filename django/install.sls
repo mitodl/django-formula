@@ -9,28 +9,52 @@ create_django_app_user:
 django_system_dependencies:
   pkg.installed:
     - pkgs: {{ django.pkgs }}
-    - require_in:
-        - service: django_service_running
 
-{% if django.deploy_from_git %}
-clone_app:
-  git.latest:
-    - name: {{ salt.pillar.get('django:git_repository') }}
-    - target: /opt/{{ app_name }}
+create_deployment_target_directory:
+  file.directory:
+    - name: /opt/{{ app_name }}
     - user: {{ django.user }}
-{% else %}
-unpack_release_archive:
-  archive.extracted:
-    - name: /opt
-    - source: {{ salt.pillar.get('django:release_archive') }}
-    - source_hash: {{ salt.pillar.get('django:release_archive_hash') }}
-    - source_hash_update: True
-    - user: {{ django.user }}
-{% endif %}
+    - group: {{ django.group }}
+    - recurse:
+        - user
+        - group
+
+{% set app_source = django.app_source %}
+{% set deploy_source = {
+    'git': [
+        'latest',
+        {'user': django.user},
+        {'name': app_source.repository_url},
+        {'rev': app_source.get('revision', 'master')},
+        {'target': '/opt/{app}/'.format(app=app_name)},
+        {'branch': app_source.get('branch')}
+    ],
+    'hg': [
+        'latest',
+        {'user': django.user},
+        {'name': app_source.repository_url},
+        {'rev': app_source.get('revision', 'master')},
+        {'target': '/opt/{app}/'.format(app=app_name)}
+    ],
+    'archive': [
+        'extracted',
+        {'name': '/opt/{app}/'.format(app=app_name)},
+        {'source': app_source.repository_url}
+    ]
+} %}
+
+deploy_application_source_to_destination:
+  {{ app_source.type }}:
+    {{ deploy_source[app_source.type]|yaml }}
 
 install_python_requirements:
   pip.installed:
     - requirements: /opt/{{ app_name }}/{{ django.requirements_file }}
 
+{% set setup_states = salt.pillar.get('django:states:setup', []) %}
+{% if setup_states %}
 include:
-  - {{ app_name }}.setup
+  {% for setup_state in setup_states %}
+  - {{ setup_state }}
+  {% endfor %}
+{% endif %}
