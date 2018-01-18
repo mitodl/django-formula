@@ -1,8 +1,19 @@
 # -*- mode: yaml -*-
 {% set app_name = 'healthchecks' %}
+{% set python_bin_dir = '/usr/local/pyenv/versions/3.6.3/bin' %}
+
+python:
+  versions:
+    - number: 3.6.3
+      default: True
+      user: root
 
 django:
+  pip_path: {{ python_bin_dir }}/pip3
+  django_admin_path: {{ python_bin_dir }}/django-admin
   app_name: {{ app_name }}
+  settings_module: hc.settings
+  automatic_migrations: True
   app_source:
     type: git # Options are: git, hg, archive
     revision: master
@@ -17,19 +28,30 @@ django:
     - zlib1g-dev
     - libpqxx-dev
     - libxml2-dev
-    - libxslt-dev
 
 uwsgi:
+  overrides:
+    pip_path: {{ python_bin_dir }}/pip3
+    uwsgi_path: {{ python_bin_dir }}/uwsgi
+  emperor_config:
+    uwsgi:
+      logto: /var/log/uwsgi/emperor.log
   apps:
     {{ app_name }}:
       uwsgi:
-        socket: /var/run/{{ app_name }}.sock
+        socket: /var/run/uwsgi/{{ app_name }}.sock
+        chown-socket: www-data:deploy
+        chdir: /opt/{{ app_name }}
+        home: /usr/local/pyenv/versions/3.6.3/
+        uid: deploy
+        gid: deploy
         processes: 1
         threads: 10
         enable-threads: 'true'
-        thunder-lock: ''
-        wsgifile: /opt/{{ app_name }}/hc/wsgi.py
-        pidfile: /var/run/{{ app_name }}.pid
+        thunder-lock: 'true'
+        logto: /var/log/uwsgi/apps/%n.log
+        module: hc.wsgi
+        pidfile: /var/run/uwsgi/{{ app_name }}.pid
 
 nginx:
   ng:
@@ -69,7 +91,7 @@ nginx:
             - server:
                 - listen: 80
                 - location /:
-                    - uwsgi_pass: /var/run/{{ app_name }}.sock
+                    - uwsgi_pass: unix:/var/run/uwsgi/{{ app_name }}.sock
                     - uwsgi_pass_request_headers: 'on'
                     - uwsgi_pass_request_body: 'on'
                     - include: uwsgi_params

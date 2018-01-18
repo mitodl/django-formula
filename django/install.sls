@@ -1,5 +1,5 @@
 {% from "django/map.jinja" import django with context %}
-{% set app_name = salt.pillar.get('django:app_name', 'django_app') %}
+{% set app_name = django.get('app_name', 'django_app') %}
 
 create_django_app_user:
   user.present:

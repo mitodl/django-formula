@@ -1,18 +1,24 @@
 {% from "django/map.jinja" import django with context %}
+{% set app_name = django.get('app_name', 'django_app') %}
 
 {% if django.automatic_migrations %}
 migrate_database:
   module.run:
-    django.command:
-      - settings_module: {{ django.settings_file }}
-      - command: migrate
+    - name: django.command
+    - settings_module: {{ django.settings_module }}
+    - pythonpath: /opt/{{ app_name }}
+    - command: migrate
+    - bin_env: {{ django.django_admin_path }}
+    - user: {{ django.user }}
 {% endif %}
 
 collect_static_assets:
   module.run:
-    django.command:
-      - settings_module: {{ django.settings_file }}
-      - command: collectstatic
+    - name: django.collectstatic
+    - settings_module: {{ django.settings_module }}
+    - pythonpath: /opt/{{ app_name }}
+    - bin_env: {{ django.django_admin_path }}
+    - user: {{ django.user }}
 
 {% set post_install_states = salt.pillar.get('django:states:post_install', []) %}
 {% if post_install_states %}

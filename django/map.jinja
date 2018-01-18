@@ -4,7 +4,8 @@
         'pkgs': ['git'],
         'pip_path': '/usr/local/bin/pip3',
         'deploy_from_git': True,
-        'settings_file': 'settings.py',
+        'settings_module': 'django_app.settings',
+        'django_admin_path': '/usr/local/bin/django-admin',
         'user': 'deploy',
         'group': 'deploy',
         'requirements_file': 'requirements.txt'
