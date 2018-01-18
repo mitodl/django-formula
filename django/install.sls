@@ -42,10 +42,11 @@ create_deployment_target_directory:
         {'source': app_source.repository_url}
     ]
 } %}
+{% set source_state = deploy_source[app_source.type] + app_source.get('state_params', []) %}
 
 deploy_application_source_to_destination:
   {{ app_source.type }}:
-    {{ deploy_source[app_source.type]|yaml }}
+    {{ source_state|yaml }}
 
 install_python_requirements:
   pip.installed:

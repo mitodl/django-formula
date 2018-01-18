@@ -17,7 +17,12 @@ django:
   app_source:
     type: git # Options are: git, hg, archive
     revision: master
-    repository_url: https://github.com/healthchecks/healthchecks
+    repository_url: https://github.com/mitodl/healthchecks
+    state_params:
+      - branch: master
+      - force_fetch: True
+      - force_checkout: True
+      - force_reset: True
   pkgs:
     - python3
     - python3-dev
