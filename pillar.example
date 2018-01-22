@@ -1,7 +1,111 @@
 # -*- mode: yaml -*-
+{% set app_name = 'healthchecks' %}
+{% set python_bin_dir = '/usr/local/pyenv/versions/3.6.3/bin' %}
+
+python:
+  versions:
+    - number: 3.6.3
+      default: True
+      user: root
+
 django:
+  pip_path: {{ python_bin_dir }}/pip3
+  django_admin_path: {{ python_bin_dir }}/django-admin
+  app_name: {{ app_name }}
+  settings_module: hc.settings
+  automatic_migrations: True
+  app_source:
+    type: git # Options are: git, hg, archive
+    revision: master
+    repository_url: https://github.com/mitodl/healthchecks
+    state_params:
+      - branch: master
+      - force_fetch: True
+      - force_checkout: True
+      - force_reset: True
+  pkgs:
+    - python3
+    - python3-dev
+    - python3-pip
+    - build-essential
+    - libssl-dev
+    - libjpeg-dev
+    - zlib1g-dev
+    - libpqxx-dev
+    - libxml2-dev
+
+uwsgi:
   overrides:
-    pkg: django
-    conf_file: /usr/local/etc/django/django.conf
-  config:
-    key: othervalue
+    pip_path: {{ python_bin_dir }}/pip3
+    uwsgi_path: {{ python_bin_dir }}/uwsgi
+  emperor_config:
+    uwsgi:
+      logto: /var/log/uwsgi/emperor.log
+  apps:
+    {{ app_name }}:
+      uwsgi:
+        socket: /var/run/uwsgi/{{ app_name }}.sock
+        chown-socket: www-data:deploy
+        chdir: /opt/{{ app_name }}
+        home: /usr/local/pyenv/versions/3.6.3/
+        uid: deploy
+        gid: deploy
+        processes: 1
+        threads: 10
+        enable-threads: 'true'
+        thunder-lock: 'true'
+        logto: /var/log/uwsgi/apps/%n.log
+        module: hc.wsgi
+        pidfile: /var/run/uwsgi/{{ app_name }}.pid
+
+nginx:
+  ng:
+    server:
+      config:
+        http:
+          access_log: !!null
+      extra_config:
+        logging:
+          log_format app_metrics: >-
+            'time=$time_iso8601
+            client=$remote_addr
+            method=$request_method
+            request="$request"
+            request_length=$request_length
+            status=$status
+            bytes_sent=$bytes_sent
+            body_bytes_sent=$body_bytes_sent
+            referer=$http_referer
+            user_agent="$http_user_agent"
+            upstream_addr=$upstream_addr
+            upstream_status=$upstream_status
+            request_time=$request_time
+            upstream_response_time=$upstream_response_time
+            upstream_connect_time=$upstream_connect_time
+            upstream_header_time=$upstream_header_time'
+          access_log: /var/log/nginx/access.log app_metrics
+    servers:
+      managed:
+        default:
+          enabled: False
+          deleted: True
+          config: None
+        {{ app_name }}:
+          enabled: True
+          config:
+            - server:
+                - listen: 80
+                - location /:
+                    - uwsgi_pass: unix:/var/run/uwsgi/{{ app_name }}.sock
+                    - uwsgi_pass_request_headers: 'on'
+                    - uwsgi_pass_request_body: 'on'
+                    - include: uwsgi_params
+        nginx_metrics:
+          enabled: True
+          config:
+            - server:
+                - location /nginx-status:
+                    - stub_status: 'on'
+                    - access_log: 'off'
+                    - allow: 127.0.0.1
+                    - deny: all
