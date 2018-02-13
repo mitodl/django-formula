@@ -8,7 +8,7 @@ create_django_app_user:
 
 django_system_dependencies:
   pkg.installed:
-    - pkgs: {{ django.pkgs }}
+    - pkgs: {{ django.pkgs|json }}
 
 create_deployment_target_directory:
   file.directory:
