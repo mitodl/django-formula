@@ -4,7 +4,7 @@
 create_django_app_user:
   user.present:
     - name: {{ django.user }}
-    - createhome: False
+    - createhome: True
 
 django_system_dependencies:
   pkg.installed:
