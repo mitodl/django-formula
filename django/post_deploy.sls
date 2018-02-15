@@ -10,6 +10,7 @@ migrate_database:
     - command: migrate
     - bin_env: {{ django.django_admin_path }}
     - user: {{ django.user }}
+    - env: {{ django.get('environment', {}) }}
 {% endif %}
 
 collect_static_assets:
@@ -19,6 +20,7 @@ collect_static_assets:
     - pythonpath: /opt/{{ app_name }}
     - bin_env: {{ django.django_admin_path }}
     - user: {{ django.user }}
+    - env: {{ django.get('environment', {}) }}
 
 {% set post_install_states = salt.pillar.get('django:states:post_install', []) %}
 {% if post_install_states %}
