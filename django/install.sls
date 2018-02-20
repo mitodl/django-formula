@@ -1,10 +1,12 @@
 {% from "django/map.jinja" import django with context %}
 {% set app_name = django.get('app_name', 'django_app') %}
+{% set app_source = django.app_source %}
 
 create_django_app_user:
   user.present:
     - name: {{ django.user }}
     - createhome: True
+    - shell: /bin/bash
 
 django_system_dependencies:
   pkg.installed:
@@ -18,8 +20,11 @@ create_deployment_target_directory:
     - recurse:
         - user
         - group
+    - require:
+        - user: create_django_app_user
+    - require_in:
+      - {{ app_source.type }}: deploy_application_source_to_destination
 
-{% set app_source = django.app_source %}
 {% set deploy_source = {
     'git': [
         'latest',
@@ -27,19 +32,34 @@ create_deployment_target_directory:
         {'name': app_source.repository_url},
         {'rev': app_source.get('revision', 'master')},
         {'target': '/opt/{app}/'.format(app=app_name)},
-        {'branch': app_source.get('branch')}
+        {'branch': app_source.get('branch')},
+        {'failhard': True},
+        {'require': [
+            {'user': 'create_django_app_user'}
+          ]
+        }
     ],
     'hg': [
         'latest',
         {'user': django.user},
         {'name': app_source.repository_url},
         {'rev': app_source.get('revision', 'master')},
-        {'target': '/opt/{app}/'.format(app=app_name)}
+        {'target': '/opt/{app}/'.format(app=app_name)},
+        {'failhard': True},
+        {'require': [
+            {'user': 'create_django_app_user'}
+          ]
+        }
     ],
     'archive': [
         'extracted',
         {'name': '/opt/{app}/'.format(app=app_name)},
-        {'source': app_source.repository_url}
+        {'source': app_source.repository_url},
+        {'failhard': True},
+        {'require': [
+            {'user': 'create_django_app_user'}
+          ]
+        }
     ]
 } %}
 {% set source_state = deploy_source[app_source.type] + app_source.get('state_params', []) %}
