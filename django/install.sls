@@ -74,6 +74,7 @@ install_python_requirements:
     - bin_env: {{ django.pip_path }}
     - require:
         - {{ app_source.type }}: deploy_application_source_to_destination
+        - pkg: django_system_dependencies
 
 {% set setup_states = salt.pillar.get('django:states:setup', []) %}
 {% if setup_states %}
