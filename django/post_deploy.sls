@@ -4,7 +4,7 @@
 {% if django.automatic_migrations %}
 migrate_database:
   module.run:
-  - name: django.command
+    - name: django.command
     - settings_module: {{ django.settings_module }}
     - pythonpath: /opt/{{ app_name }}
     - command: migrate
@@ -15,7 +15,7 @@ migrate_database:
 
 collect_static_assets:
   module.run:
-  - name: django.collectstatic
+    - name: django.collectstatic
     - settings_module: {{ django.settings_module }}
     - pythonpath: /opt/{{ app_name }}
     - bin_env: {{ django.django_admin_path }}
